@@ -16,6 +16,7 @@ interface TableProps<T> {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  onRowClick?: (row: T) => void;
 }
 
 export function Table<T extends { id?: string | number }>({
@@ -25,7 +26,8 @@ export function Table<T extends { id?: string | number }>({
   emptyMessage = 'Nenhum registro encontrado.',
   currentPage = 1,
   totalPages = 1,
-  onPageChange
+  onPageChange,
+  onRowClick
 }: TableProps<T>) {
 
   return (
@@ -59,7 +61,11 @@ export function Table<T extends { id?: string | number }>({
               </tr>
             ) : (
               data.map((row, rowIndex) => (
-                <tr key={row.id || rowIndex} className="hover:bg-slate-50/50 transition-colors">
+                <tr 
+                  key={row.id || rowIndex} 
+                  onClick={() => onRowClick?.(row)}
+                  className={`transition-colors ${onRowClick ? 'hover:bg-slate-50 cursor-pointer' : 'hover:bg-slate-50/50'}`}
+                >
                   {columns.map((col, colIndex) => (
                     <td key={colIndex} className={`px-6 py-4 text-slate-700 ${col.className || ''}`}>
                       {typeof col.accessor === 'function' ? col.accessor(row) : (row[col.accessor] as React.ReactNode)}

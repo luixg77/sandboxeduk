@@ -1,4 +1,5 @@
 export type PerformanceCategory = "Abaixo do Básico" | "Básico" | "Adequado" | "Avançado";
+export type Subject = "Linguagens" | "Matemática" | "Todos";
 
 export interface StudentPerformance {
   id: string;

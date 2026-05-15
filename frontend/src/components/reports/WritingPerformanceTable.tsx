@@ -105,20 +105,6 @@ export const WritingPerformanceTable: React.FC<WritingPerformanceTableProps> = (
       header: "Proficiência (Redação)",
       accessor: (row: StudentPerformance) => <ProficiencyBadge category={row.writingCategory} />,
     },
-    {
-      header: "Ações",
-      accessor: (row: StudentPerformance) => (
-        <div className="flex justify-center">
-          <button 
-            onClick={() => setSelectedStudent(row)}
-            title="Ver Raio-X"
-            className="p-2 text-gray-400 hover:text-kodar-600 hover:bg-kodar-50 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-kodar-500/20"
-          >
-            <Eye className="w-5 h-5" strokeWidth={2.5} />
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -172,6 +158,7 @@ export const WritingPerformanceTable: React.FC<WritingPerformanceTableProps> = (
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+        onRowClick={(row) => setSelectedStudent(row)}
         emptyMessage="Nenhum aluno encontrado."
       />
 

@@ -5,9 +5,11 @@ import { QuestionStat } from "@/types/report";
 
 interface ItemAnalysisGridProps {
   questions: QuestionStat[];
+  subject: string;
+  onQuestionClick: (q: QuestionStat) => void;
 }
 
-export const ItemAnalysisGrid: React.FC<ItemAnalysisGridProps> = ({ questions }) => {
+export const ItemAnalysisGrid: React.FC<ItemAnalysisGridProps> = ({ questions, subject, onQuestionClick }) => {
   // Cores em tons pastel/heatmap suave
   const getHeatmapColor = (percentage: number) => {
     if (percentage >= 85) return "bg-emerald-200 text-emerald-900";
@@ -20,8 +22,12 @@ export const ItemAnalysisGrid: React.FC<ItemAnalysisGridProps> = ({ questions })
   const linguagens = questions.filter((q) => q.subject === "Linguagens");
   const matematica = questions.filter((q) => q.subject === "Matemática");
 
-  // Identificar as 3 piores questões gerais
-  const criticalQuestions = [...questions]
+  // Filtrar questões críticas baseado na disciplina ativa
+  const activeQuestions = subject === "Todos" 
+    ? questions 
+    : questions.filter(q => q.subject === subject);
+
+  const criticalQuestions = [...activeQuestions]
     .sort((a, b) => a.correctPercentage - b.correctPercentage)
     .slice(0, 3);
 
@@ -32,10 +38,11 @@ export const ItemAnalysisGrid: React.FC<ItemAnalysisGridProps> = ({ questions })
         {data.map((q) => (
           <div
             key={q.id}
+            onClick={() => onQuestionClick(q)}
             className={`flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-lg ${getHeatmapColor(
               q.correctPercentage
-            )} transition-all hover:scale-110 hover:shadow-md cursor-default flex-shrink-0`}
-            title={`Questão ${q.number}: ${q.correctPercentage}% de acerto`}
+            )} transition-all hover:scale-110 hover:shadow-md cursor-pointer flex-shrink-0`}
+            title={`Questão ${q.number}: ${q.correctPercentage}% de acerto (Clique para ver detalhes)`}
           >
             <span className="text-xs font-bold opacity-70 mb-0.5">Q{q.number}</span>
             <span className="text-base sm:text-lg font-black leading-none">{q.correctPercentage}%</span>
@@ -73,9 +80,9 @@ export const ItemAnalysisGrid: React.FC<ItemAnalysisGridProps> = ({ questions })
       </div>
 
       <div className="flex flex-col gap-6 w-full overflow-x-auto pb-2">
-        {renderGrid("Linguagens", linguagens)}
-        <div className="w-full h-px bg-gray-100"></div>
-        {renderGrid("Matemática", matematica)}
+        {(subject === "Todos" || subject === "Linguagens") && renderGrid("Linguagens", linguagens)}
+        {subject === "Todos" && <div className="w-full h-px bg-gray-100"></div>}
+        {(subject === "Todos" || subject === "Matemática") && renderGrid("Matemática", matematica)}
       </div>
       
       {/* Legenda do Heatmap */}

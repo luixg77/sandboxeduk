@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ReportData, PerformanceCategory, QuestionStat } from "../types/report";
+import { ReportData, PerformanceCategory, QuestionStat, StudentPerformance } from "../types/report";
 import allData from "../data/allData.json";
 
 export const filterOptions = {
@@ -20,9 +20,14 @@ export const filterOptions = {
       label: `Turma ${c}`
     }))
   ],
+  subjects: [
+    { value: "", label: "Selecione a disciplina..." },
+    { value: "Linguagens", label: "Linguagens" },
+    { value: "Matemática", label: "Matemática" },
+  ],
 };
 
-export const useReportData = (filters: { school: string; year: string; class: string }) => {
+export const useReportData = (filters: { school: string; year: string; class: string; subject: string }) => {
   const [data, setData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,9 +63,13 @@ export const useReportData = (filters: { school: string; year: string; class: st
       const qMatCount = Array(22).fill(0);
 
       filteredStudents.forEach(s => {
-        if (profLing[s.linguagensCategory] !== undefined) profLing[s.linguagensCategory]++;
-        if (profMat[s.matematicaCategory] !== undefined) profMat[s.matematicaCategory]++;
-        if (profWrite[s.writingCategory] !== undefined) profWrite[s.writingCategory]++;
+        const lc = s.linguagensCategory as PerformanceCategory;
+        const mc = s.matematicaCategory as PerformanceCategory;
+        const wc = s.writingCategory as PerformanceCategory;
+
+        if (profLing[lc] !== undefined) profLing[lc]++;
+        if (profMat[mc] !== undefined) profMat[mc]++;
+        if (profWrite[wc] !== undefined) profWrite[wc]++;
         
         writeAdeq += s.writingAdequation;
         writeCoh += s.writingCoherence;
@@ -98,6 +107,11 @@ export const useReportData = (filters: { school: string; year: string; class: st
           colorCategory: pct >= 70 ? "green" : pct >= 50 ? "yellow" : "red"
         });
       });
+      
+      let finalQuestions = questions;
+      if (filters.subject !== "Todos") {
+        finalQuestions = questions.filter(q => q.subject === filters.subject);
+      }
 
       const writingMetrics = {
         averageAdequation: Number((writeAdeq / totalStudents).toFixed(1)),
@@ -111,8 +125,8 @@ export const useReportData = (filters: { school: string; year: string; class: st
         metrics,
         proficiencyLinguagens: profLing,
         proficiencyMatematica: profMat,
-        questions,
-        students: filteredStudents,
+        questions: finalQuestions,
+        students: filteredStudents as StudentPerformance[],
         writingMetrics,
         gabarito: allData.gabarito
       };
