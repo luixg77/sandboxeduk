@@ -61,3 +61,13 @@ export interface ReportData {
     matematica: string[];
   };
 }
+
+export type ComparisonEntityType = "Escola" | "Turma" | "Aluno" | "Média Estadual";
+
+export interface ComparisonEntity {
+  id: string;
+  type: ComparisonEntityType;
+  value: string; // The selected class or student ID, empty for Escola/Média Estadual
+  label: string; // Display name in legend
+  color: string; // Hex color
+}

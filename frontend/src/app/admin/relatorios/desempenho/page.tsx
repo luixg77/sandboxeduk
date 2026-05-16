@@ -6,6 +6,7 @@ import { OverviewMetrics } from "@/components/reports/OverviewMetrics";
 import { ProficiencyCharts } from "@/components/reports/ProficiencyCharts";
 import { ClassDistributionChart } from "@/components/reports/ClassDistributionChart";
 import { ScatterPerformanceChart } from "@/components/reports/ScatterPerformanceChart";
+import { ComparativeAnalysisChart } from "@/components/reports/ComparativeAnalysisChart";
 import { ItemAnalysisGrid } from "@/components/reports/ItemAnalysisGrid";
 import { StudentPerformanceTable } from "@/components/reports/StudentPerformanceTable";
 import { WritingMetrics } from "@/components/reports/WritingMetrics";
@@ -125,6 +126,10 @@ export default function DesempenhoPage() {
                 onCategoryClick={(category, subject) => setSelectedProficiency({ category, subject })}
               />
               
+              <div className="w-full">
+                <ComparativeAnalysisChart subject={filters.subject} />
+              </div>
+
               <div className="flex flex-col gap-8 mb-8">
                 {filters.class === "all" && (
                   <div className="w-full">
