@@ -1,24 +1,28 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from 'next/dynamic';
 import { ReportFilters } from "@/components/reports/ReportFilters";
 import { OverviewMetrics } from "@/components/reports/OverviewMetrics";
-import { ProficiencyCharts } from "@/components/reports/ProficiencyCharts";
-import { ClassDistributionChart } from "@/components/reports/ClassDistributionChart";
-import { ScatterPerformanceChart } from "@/components/reports/ScatterPerformanceChart";
-import { ComparativeAnalysisChart } from "@/components/reports/ComparativeAnalysisChart";
+
+// Lazy loading components pesados (Recharts)
+const ClassDistributionChart = dynamic(() => import('@/components/reports/ClassDistributionChart').then(mod => mod.ClassDistributionChart), { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-xl animate-pulse"><p className="text-gray-400 font-medium">Carregando gráfico...</p></div> });
+const ScatterPerformanceChart = dynamic(() => import('@/components/reports/ScatterPerformanceChart').then(mod => mod.ScatterPerformanceChart), { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-xl animate-pulse"><p className="text-gray-400 font-medium">Carregando gráfico...</p></div> });
+const ComparativeAnalysisChart = dynamic(() => import('@/components/reports/ComparativeAnalysisChart').then(mod => mod.ComparativeAnalysisChart), { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-xl animate-pulse"><p className="text-gray-400 font-medium">Carregando gráfico...</p></div> });
+const ProficiencyCharts = dynamic(() => import('@/components/reports/ProficiencyCharts').then(mod => mod.ProficiencyCharts), { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-xl animate-pulse"><p className="text-gray-400 font-medium">Carregando gráficos...</p></div> });
+
 import { ItemAnalysisGrid } from "@/components/reports/ItemAnalysisGrid";
 import { StudentPerformanceTable } from "@/components/reports/StudentPerformanceTable";
 import { WritingMetrics } from "@/components/reports/WritingMetrics";
 import { WritingPerformanceTable } from "@/components/reports/WritingPerformanceTable";
 import { ItemAuditorModal } from "@/components/reports/ItemAuditorModal";
 import { ProficiencyListModal } from "@/components/reports/ProficiencyListModal";
+import { ExportReportSection } from "@/components/reports/ExportReportSection";
 import { useReportData } from "@/hooks/useReportData";
 import { PerformanceCategory, QuestionStat, Subject } from "@/types/report";
-import { BookOpen, PenTool, LayoutGrid, Download, FileSpreadsheet, Loader2, CheckCircle2 } from "lucide-react";
+import { BookOpen, PenTool, LayoutGrid, CheckCircle2 } from "lucide-react";
 
 export default function DesempenhoPage() {
-  const [exportState, setExportState] = useState<"idle" | "loading" | "ready">("idle");
   const [filters, setFilters] = useState({
     school: "",
     year: "all",
@@ -31,22 +35,6 @@ export default function DesempenhoPage() {
   // Estados para Modais Detalhados
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionStat | null>(null);
   const [selectedProficiency, setSelectedProficiency] = useState<{ category: PerformanceCategory, subject: "Linguagens" | "Matemática" } | null>(null);
-
-  const handleExport = () => {
-    setExportState("loading");
-    // Simula o tempo de geração do relatório no backend (3 segundos)
-    setTimeout(() => {
-      setExportState("ready");
-    }, 3000);
-  };
-
-  const handleDownload = () => {
-    // Em um cenário real, isso faria o trigger do download do Blob retornado pela API
-    // Resetando para o estado inicial para demonstrar o ciclo
-    setTimeout(() => {
-      setExportState("idle");
-    }, 1000);
-  };
 
   const { data, isLoading } = useReportData(filters);
 
@@ -157,67 +145,29 @@ export default function DesempenhoPage() {
             </div>
           )}
 
-          {/* Modais de Detalhamento */}
-          <ItemAuditorModal 
-            isOpen={!!selectedQuestion}
-            onClose={() => setSelectedQuestion(null)}
-            question={selectedQuestion}
-            students={data.students}
-            gabarito={selectedQuestion ? (selectedQuestion.subject === 'Linguagens' ? data.gabarito?.linguagens[selectedQuestion.number-1] : data.gabarito?.matematica[selectedQuestion.number-1]) || null : null}
-          />
+          {/* Modais de Detalhamento Condicionais */}
+          {!!selectedQuestion && (
+            <ItemAuditorModal 
+              isOpen={!!selectedQuestion}
+              onClose={() => setSelectedQuestion(null)}
+              question={selectedQuestion}
+              students={data.students}
+              gabarito={selectedQuestion.subject === 'Linguagens' ? data.gabarito?.linguagens[selectedQuestion.number-1] : data.gabarito?.matematica[selectedQuestion.number-1]}
+            />
+          )}
 
-          <ProficiencyListModal 
-            isOpen={!!selectedProficiency}
-            onClose={() => setSelectedProficiency(null)}
-            category={selectedProficiency?.category || null}
-            subject={selectedProficiency?.subject || "Linguagens"}
-            students={data.students}
-          />
+          {!!selectedProficiency && (
+            <ProficiencyListModal 
+              isOpen={!!selectedProficiency}
+              onClose={() => setSelectedProficiency(null)}
+              category={selectedProficiency.category}
+              subject={selectedProficiency.subject}
+              students={data.students}
+            />
+          )}
 
-          {/* Seção de Exportação (Mock de Frontend) */}
-          <div className="mt-12 bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-6 animate-fade-in">
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FileSpreadsheet className="w-6 h-6 text-emerald-600" />
-                Exportar Relatório Analítico
-              </h3>
-              <p className="text-gray-500 mt-2 max-w-xl text-sm font-medium">
-                Gere uma planilha Excel (.xlsx) completa com os microdados da turma, seguindo o padrão oficial. O arquivo será filtrado de acordo com a seleção atual ({filters.class === 'all' ? 'Todas as Turmas' : `Turma ${filters.class}`}).
-              </p>
-            </div>
-            
-            <div className="flex-shrink-0 w-full sm:w-auto">
-              {exportState === "idle" && (
-                <button
-                  onClick={handleExport}
-                  className="w-full sm:w-auto bg-kodar-600 hover:bg-kodar-700 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-3 transition-all transform hover:scale-105 hover:shadow-lg shadow-md"
-                >
-                  <FileSpreadsheet className="w-5 h-5" />
-                  Gerar Planilha
-                </button>
-              )}
-
-              {exportState === "loading" && (
-                <button
-                  disabled
-                  className="w-full sm:w-auto bg-kodar-100 text-kodar-700 font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-3 cursor-not-allowed border border-kodar-200"
-                >
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="animate-pulse">Processando Dados...</span>
-                </button>
-              )}
-
-              {exportState === "ready" && (
-                <button
-                  onClick={handleDownload}
-                  className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-3 transition-all transform hover:scale-105 hover:shadow-lg shadow-emerald-500/30 animate-fade-in"
-                >
-                  <Download className="w-5 h-5" />
-                  Baixar Relatório.xlsx
-                </button>
-              )}
-            </div>
-          </div>
+          {/* Seção de Exportação Otimizada */}
+          <ExportReportSection filters={filters} />
         </div>
       )}
       </>
